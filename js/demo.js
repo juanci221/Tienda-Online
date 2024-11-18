@@ -90,11 +90,11 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
   
     const formData = new FormData();
     formData.append('file', productImage);
-    formData.append('upload_preset', 'productos_unsigned');
-    formData.append('folder', 'products/'); 
+    formData.append('upload_preset', 'producto_unsigned');
+    formData.append('folder', 'product'); 
 
         // Cargar la imagen a Cloudinary
-        fetch('https://api.cloudinary.com/v1_1/dmqktwloi/image/upload', {
+        fetch('https://api.cloudinary.com/v1_1/......../image/upload', {
             method: 'POST',
             body: formData
         })
