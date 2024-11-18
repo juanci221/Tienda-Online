@@ -42,11 +42,7 @@ function updateUIState() {
 }
 
 
-// Credenciales de administrador
-const ADMIN_CREDENTIALS = {
-    username: 'admin',
-    password: 'admin123'
-};
+
 
 // Estado de la aplicación
 let isLoggedIn = false;
