@@ -1,91 +1,245 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8"> 
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tienda Online</title>
-    <link rel="stylesheet" type="text/css" href="Css/stilo.css" />
-    <link rel="icon" type="image/x-icon" href="imag-icono.png">
-    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+// Importa las funciones necesarias del SDK de Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
+// Configuración de Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyC-zHeQEzKvp_JmAzDg4EOdzvLg1NgYJUA",
+    authDomain: "tienda-online-d76f5.firebaseapp.com",
+    projectId: "tienda-online-d76f5",
+    storageBucket: "tienda-online-d76f5.firebasestorage.com",
+    messagingSenderId: "610175643337",
+    appId: "1:610175643337:web:bebe6750ac119d394f2718"
+};
 
+// Inicializa Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-</head>
-<body>
+// Estado de inicio de sesión
+let isLoggedIn = false;
 
-    <nav class="navbar">
-        <a href="#" class="navbar-brand">Tienda Online</a>
-        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-        <div class="navbar-buttons" id="navbarButtons">
-            <button id="loginBtn" class="nav-button primary"  onclick="redirectToLogin()">Usuario</button>
+// Función para manejar la redirección a la página de login
+function redirectToLogin() {
+    window.location.href = 'product.html';
+}
+
+// Función para manejar la redirección a la página de inicio
+function redirectToLoginA() {
+    window.location.href = 'index.html';
+}
+
+// Función para alternar el menú móvil
+function toggleMenu() {
+    const navbarButtons = document.getElementById('navbarButtons');
+    if (navbarButtons) {
+        navbarButtons.classList.toggle('active');
+    }
+}
+
+// Función para actualizar el estado de la interfaz de usuario
+function updateUIState(user) {
+    const loginSection = document.getElementById('loginSection');
+    const adminSection = document.getElementById('adminSection');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    if (loginSection && adminSection && logoutBtn && resetBtn) {
+        if (user) {
+            isLoggedIn = true;
+            loginSection.classList.add('hidden');
+            adminSection.classList.remove('hidden');
+            logoutBtn.classList.remove('hidden');
+            resetBtn.classList.remove('hidden');
+        } else {
+            isLoggedIn = false;
+            loginSection.classList.remove('hidden');
+            adminSection.classList.add('hidden');
+            logoutBtn.classList.add('hidden');
+            resetBtn.classList.add('hidden');
+        }
+        renderProducts();
+    }
+}
+
+// Renderizar productos
+function renderProducts() {
+    const productsContainer = document.getElementById('productsContainer');
+    if (productsContainer) {
+        productsContainer.innerHTML = '';
         
-        </div>
-    </nav>
-
-    <section class="store-description">
-        <div class="store-description">
-            <h2>🛍️ Descubre la Comodidad de Comprar sin Salir de Casa</h2>
+        products.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
             
-            <p>Bienvenido a tu tienda online de confianza, donde la calidad y la comodidad se encuentran. Transforma tu experiencia de compra con un servicio pensado para ti:</p>
+            const adminControls = isLoggedIn ? `
+                <div class="admin-controls">
+                    <button class="delete-btn" onclick="deleteProduct('${product.id}')">Eliminar</button>
+                </div>
+            ` : '';
             
-            <ul>
-                <li>
-                    <span class="icon">🚚</span>
-                    <strong>Entrega Rápida y Segura</strong>
-                    <br>
-                    Retiro en nuestro local.
-                </li>
-                
-                <li>
-                    <span class="icon">💳</span>
-                    <strong>Métodos de Pago Flexibles</strong>
-                    <br>
-                    Transferencia bancaria sin complicaciones, con Mercado Pago. Opciones pensadas para tu comodidad.
-                </li>
-                
-                <li>
-                    <span class="icon">🌟</span>
-                    <strong>Calidad Garantizada</strong>
-                    <br>
-                    Productos seleccionados con los más altos estándares. Precios competitivos sin sacrificar la excelencia.
-                </li>
-                
-                <li>
-                    <span class="icon">🤝</span>
-                    <strong>Compra Inteligente, Compra Segura</strong>
-                    <br>
-                    Sin intermediarios. Atención personalizada. Asesoramiento en cada paso de tu compra.
-                </li>
-            </ul>
+            productCard.innerHTML = `
+                ${adminControls}
+                <img src="${product.imageUrl}" alt="${product.name}" class="product-image">
+                <div class="product-info">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p class="price">$${parseFloat(product.price).toFixed(2)}</p>
+                </div>
+            `;
             
-            <p><em>¿Listo para una experiencia de compra revolucionaria?</em></p>
+            productsContainer.appendChild(productCard);
+        });
+    }
+}
+
+// Eliminar producto
+function deleteProduct(productId) {
+    if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+        products = products.filter(p => p.id !== productId);
+        renderProducts();
+        saveProducts();
+    }
+}
+
+// Guardar productos en localStorage
+function saveProducts() {
+    localStorage.setItem('products', JSON.stringify(products));
+}
+
+// Inicializar productos
+let products = [];
+
+// Cargar productos
+function loadProducts() {
+    const storedProducts = localStorage.getItem('products');
+    products = storedProducts ? JSON.parse(storedProducts) : [];
+    renderProducts();
+}
+
+// Manejo del formulario de inicio de sesión
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const productForm = document.getElementById('productForm');
+
+    // Evento de inicio de sesión
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    console.log("Inicio de sesión exitoso:", userCredential.user);
+                    window.location.href = "product.html";
+                })
+                .catch((error) => {
+                    console.error("Error al iniciar sesión:", error.message);
+                    alert("Usuario o contraseña incorrectos");
+                });
+        });
+    }
+
+    // Evento de cierre de sesión
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error("Error al cerrar sesión:", error);
+                });
+        });
+    }
+
+    // Evento de reinicio de productos
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetProducts);
+    }
+
+    // Evento de agregar producto
+    if (productForm) {
+        productForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            <a href="https://wa.me/5493435517052" class="cta-button" target="_blank">
-                Contáctanos por WhatsApp
-            </a>
-        </div>
-    </section>
-  
+            const productName = document.getElementById('productName').value;
+            const productPrice = document.getElementById('productPrice').value;
+            const productDescription = document.getElementById('productDescription').value;
+            const productImage = document.getElementById('productImage').files[0];
 
-    <div id="productsContainer" class="products-grid">
-        <!-- Aquí se mostrarán los productos -->
-    </div>
+            if (!productImage) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
 
-    <!-- Botón de WhatsApp -->
-<a href="https://wa.me/5493435517052" target="_blank" id="whatsappBtn">
-    <img src="icono logo whatsapp.png" alt="WhatsApp" />
-</a>
+            const formData = new FormData();
+            formData.append('file', productImage);
+            formData.append('upload_preset', 'productos_unsigned');
+            formData.append('folder', 'products/'); 
 
+            // Cargar la imagen a Cloudinary
+            fetch('https://api.cloudinary.com/v1_1/dmqktwloi/image/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.secure_url) {
+                    // La imagen se cargó correctamente
+                    const product = {
+                        id: Date.now().toString(),
+                        imageUrl: result.secure_url, 
+                        name: productName,
+                        price: productPrice,
+                        description: productDescription
+                    };
 
+                    products.push(product);
+                    localStorage.setItem('products', JSON.stringify(products));
 
-<script type="module" src="js/demos.js"></script>
+                    alert('Producto agregado exitosamente');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Error al cargar la imagen. Intenta nuevamente.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al subir la imagen:', error);
+                alert('Hubo un problema al subir la imagen. Verifica tu configuración.');
+            });
+        });
+    }
 
+    // Observador de estado de autenticación
+    onAuthStateChanged(auth, (user) => {
+        updateUIState(user);
+        if (user) {
+            console.log('Usuario autenticado:', user);
+            loadProducts();
+        } else {
+            console.log('No hay usuario autenticado');
+            // Asegurarse de que los productos se carguen incluso si no hay usuario
+            loadProducts();
+        }
+    });
+});
 
+// Función para reiniciar productos
+function resetProducts() {
+    if (confirm('¿Estás seguro de que deseas eliminar TODOS los productos? Esta acción no se puede deshacer.')) {
+        products = []; 
+        localStorage.removeItem('products');  
+        renderProducts();  
+        alert('Todos los productos han sido eliminados');
+    }
+}
 
-
-
-
-
-</body>
-</html>
+// Exportar funciones globales para uso en línea
+window.redirectToLogin = redirectToLogin;
+window.redirectToLoginA = redirectToLoginA;
+window.toggleMenu = toggleMenu;
+window.deleteProduct = deleteProduct;
